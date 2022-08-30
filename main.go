@@ -2,56 +2,30 @@ package main
 
 import (
 	"os"
-	"path"
+	"os/signal"
 
 	"github.com/NilsPonsard/verbosity"
-	cli "github.com/jawher/mow.cli"
-	"github.com/do3-2021/booty-mover/internal/commands"
-	"github.com/do3-2021/booty-mover/pkg/files"
+	"github.com/do3-2021/booty-mover/internal/bot"
 )
 
 // Version will be set by the script build.sh
 var version string
 
 func main() {
+	verbosity.SetupLog(true, "", version)
 
-	app := cli.App("booty-mover", "starter project")
-	app.Version("v version", version)
+	session, err := bot.Connect()
 
-	defaultPath := files.ParsePath("~/.booty-mover/")
-
-	// arguments
-
-	var (
-		verbose     = app.BoolOpt("d debug", false, "Debug mode, more verbose operations")
-		appPath     = app.StringOpt("c config", path.Join(defaultPath, "config.json"), "Path to the config file")
-		disableLogs = app.BoolOpt("disable-logs", false, "Disable the saving of logs")
-	)
-
-	// Executed befor the commands
-
-	app.Before = func() {
-
-		parsedConfigPath := *appPath
-		files.EnsureFolder(parsedConfigPath)
-
-		// create the folder for the logs
-
-		files.EnsureFolder(path.Join(defaultPath, "test"))
-
-		// Configure the logs
-
-		verbosity.SetupLog(*verbose, path.Join(defaultPath, "logs.txt"), version)
-
-		verbosity.SetLogging(!*disableLogs)
-
+	if err != nil {
+		verbosity.Fatal(err)
 	}
 
-	// set subcommands
+	defer session.Close()
 
-	commands.SetupCommands(app)
+	// commands.Configure(session)
 
-	// parse the args
-
-	app.Run(os.Args)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	verbosity.Info("Press Ctrl+C to exit")
+	<-stop
 }
