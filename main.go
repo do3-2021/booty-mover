@@ -6,6 +6,7 @@ import (
 
 	"github.com/NilsPonsard/verbosity"
 	"github.com/do3-2021/booty-mover/internal/bot"
+	"github.com/do3-2021/booty-mover/internal/commands"
 )
 
 // Version will be set by the script build.sh
@@ -22,7 +23,7 @@ func main() {
 
 	defer session.Close()
 
-	// commands.Configure(session)
+	commands.Configure(session)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
