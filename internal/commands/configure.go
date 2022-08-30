@@ -7,7 +7,7 @@ import (
 	"github.com/do3-2021/booty-mover/internal/commands/roleselector"
 )
 
-var summaries = []common.Summary{
+var summaries = []common.CommandDescriptor{
 	ping.Summary,
 	roleselector.Summary,
 }

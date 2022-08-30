@@ -19,7 +19,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 }
 
-var Summary = common.Summary{
+var Summary = common.CommandDescriptor{
 	Command: command,
 	Execute: execute,
 }

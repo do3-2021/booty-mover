@@ -9,11 +9,11 @@ import (
 )
 
 type CommandsHandler struct {
-	summaries map[string]*common.Summary
+	summaries map[string]*common.CommandDescriptor
 }
 
-func New(summaries []common.Summary) *CommandsHandler {
-	summariesMap := make(map[string]*common.Summary)
+func New(summaries []common.CommandDescriptor) *CommandsHandler {
+	summariesMap := make(map[string]*common.CommandDescriptor)
 
 	for _, summary := range summaries {
 		summariesMap[summary.Command.Name] = &summary
