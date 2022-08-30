@@ -1,4 +1,4 @@
-module github.com/nilsponsard/go-starter
+module github.com/do3-2021/booty-mover
 
 go 1.16
 

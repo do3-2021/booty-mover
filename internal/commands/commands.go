@@ -2,7 +2,7 @@ package commands
 
 import (
 	cli "github.com/jawher/mow.cli"
-	"github.com/nilsponsard/go-starter/internal/commands/ping"
+	"github.com/do3-2021/booty-mover/internal/commands/ping"
 )
 
 // configure subcommands

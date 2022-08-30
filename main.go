@@ -6,8 +6,8 @@ import (
 
 	"github.com/NilsPonsard/verbosity"
 	cli "github.com/jawher/mow.cli"
-	"github.com/nilsponsard/go-starter/internal/commands"
-	"github.com/nilsponsard/go-starter/pkg/files"
+	"github.com/do3-2021/booty-mover/internal/commands"
+	"github.com/do3-2021/booty-mover/pkg/files"
 )
 
 // Version will be set by the script build.sh
@@ -15,10 +15,10 @@ var version string
 
 func main() {
 
-	app := cli.App("go-starter", "starter project")
+	app := cli.App("booty-mover", "starter project")
 	app.Version("v version", version)
 
-	defaultPath := files.ParsePath("~/.go-starter/")
+	defaultPath := files.ParsePath("~/.booty-mover/")
 
 	// arguments
 
