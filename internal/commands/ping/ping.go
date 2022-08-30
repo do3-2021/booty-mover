@@ -1,25 +1,25 @@
 package ping
 
 import (
-	"github.com/NilsPonsard/verbosity"
-	cli "github.com/jawher/mow.cli"
+	"github.com/bwmarrin/discordgo"
+	"github.com/do3-2021/booty-mover/internal/commands/common"
 )
 
-// setup ping command
-func Ping(job *cli.Cmd) {
+var command = &discordgo.ApplicationCommand{
+	Name:        "ping",
+	Description: "Ping the bot",
+}
 
-	// arguments
+func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Pong!",
+		},
+	})
+}
 
-	pong := job.BoolOpt("p pong", false, "Answer ping")
-
-	// function to execute
-
-	job.Action = func() {
-
-		if *pong {
-			verbosity.Info("Ping !")
-		} else {
-			verbosity.Info("Pong !")
-		}
-	}
+var Summary = common.Summary{
+	Command: command,
+	Execute: execute,
 }
