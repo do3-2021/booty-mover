@@ -9,9 +9,11 @@ import (
 )
 
 type CommandsHandler struct {
-	summaries map[string]*common.CommandDescriptor
+	descriptors        map[string]*common.CommandDescriptor
+	registeredCommands []*discordgo.ApplicationCommand
 }
 
+// Create a new command handler with given command descriptors
 func New(summaries []common.CommandDescriptor) *CommandsHandler {
 	summariesMap := make(map[string]*common.CommandDescriptor)
 
@@ -20,14 +22,14 @@ func New(summaries []common.CommandDescriptor) *CommandsHandler {
 	}
 
 	return &CommandsHandler{
-		summaries: summariesMap,
+		descriptors: summariesMap,
 	}
 }
 
+// Register every commands to the session
 func (h *CommandsHandler) Register(session *discordgo.Session) (registeredCommands []*discordgo.ApplicationCommand) {
-	registeredCommands = make([]*discordgo.ApplicationCommand, len(h.summaries))
 
-	for _, summary := range h.summaries {
+	for _, summary := range h.descriptors {
 		cmd, err := session.ApplicationCommandCreate(session.State.User.ID, "", summary.Command)
 		if err != nil {
 			verbosity.Fatal(err)
@@ -35,27 +37,32 @@ func (h *CommandsHandler) Register(session *discordgo.Session) (registeredComman
 		}
 		verbosity.Debug("Registered command:", cmd.Name)
 
-		registeredCommands = append(registeredCommands, cmd)
+		h.registeredCommands = append(h.registeredCommands, cmd)
 
 	}
 
 	return
 }
 
+// Handle a discord interaction event and dispatch them to the correspondin descriptor
 func (h *CommandsHandler) Handle(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 
-	verbosity.Debug(interaction.Type)
-	verbosity.Debug(interaction.ID)
+	switch interaction.Type {
+	case discordgo.InteractionApplicationCommand:
+
+	case discordgo.InteractionMessageComponent:
+	default:
+		verbosity.Debug("Unhandled interaction type:", interaction.Type)
+	}
 
 	if interaction.Type == discordgo.InteractionMessageComponent {
-
 		verbosity.Debug(fmt.Sprintf("message : %+v", interaction.MessageComponentData()))
 		return
 	}
 
 	name := interaction.ApplicationCommandData().Name
 
-	summary, ok := h.summaries[name]
+	summary, ok := h.descriptors[name]
 	if !ok {
 		verbosity.Debug("Unknown command:", name)
 		return
