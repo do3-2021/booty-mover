@@ -7,14 +7,14 @@ import (
 	"github.com/do3-2021/booty-mover/internal/commands/roleselector"
 )
 
-var summaries = []common.CommandDescriptor{
+var descriptors = []common.CommandDescriptor{
 	ping.Summary,
 	roleselector.Summary,
 }
 
 func Configure(session *discordgo.Session) (commandsHandler *CommandsHandler) {
 
-	commandsHandler = New(summaries)
+	commandsHandler = New(descriptors)
 	commandsHandler.Register(session)
 	session.AddHandler(commandsHandler.Handle)
 
