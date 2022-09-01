@@ -1,6 +1,7 @@
 package groupcreator
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -9,6 +10,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/do3-2021/booty-mover/internal/commands/common"
+	configurechannel "github.com/do3-2021/booty-mover/internal/commands/configure-channel"
+	"github.com/do3-2021/booty-mover/internal/database"
+	"github.com/do3-2021/booty-mover/internal/guild"
 )
 
 var command = &discordgo.ApplicationCommand{
@@ -55,6 +59,37 @@ func sendErrorMessage(s *discordgo.Session, i *discordgo.InteractionCreate, erro
 	})
 }
 
+func referenceRoleInChannel(s *discordgo.Session, i *discordgo.InteractionCreate, group string, description string, roleID string) (error error) {
+	db, error := database.GetDB()
+
+	if error != nil {
+		verbosity.Error(error.Error())
+		return errors.New("could not contact database to get the role listing channel's ID.\nCancelling Group's creation")
+	}
+
+	channel, error := guild.GetGroupChannel(db, i.GuildID)
+	if error != nil {
+		verbosity.Error(error.Error())
+		return errors.New("could not find the role listing channel's.\nDid you run the " + configurechannel.Descriptor.Command.Name + " command?")
+	}
+
+	s.ChannelMessageSendComplex(channel, &discordgo.MessageSend{
+		Content: fmt.Sprintf("%v: %v", group, description),
+		Components: []discordgo.MessageComponent{
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						Label:    "Join now!",
+						CustomID: "create-group-" + roleID,
+					},
+				},
+			},
+		},
+	})
+
+	return
+}
+
 var ROLE_PERMISSIONS int64 = 0x0000000000000040 | // ADD_REACTIONS
 	0x0000000000000200 | // STREAM
 	0x0000000000000400 | // VIEW_CHANNEL
@@ -79,6 +114,20 @@ var ROLE_MENTIONNABLE bool = true
 func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	member := i.Member
+	if i.Type == discordgo.InteractionMessageComponent {
+		role := strings.Replace(i.MessageComponentData().CustomID, "create-group-", "", 1)
+
+		s.GuildMemberRoleAdd(i.GuildID, member.User.ID, role)
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+				Content: "You have Sucessfully joined the group! 🎉",
+			},
+		})
+		return
+	}
+
 	groupName := strings.Replace(i.ApplicationCommandData().Options[0].StringValue(), " ", "-", -1)
 
 	guild, error := s.GuildChannels(i.GuildID)
@@ -112,6 +161,19 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Permissions: &ROLE_PERMISSIONS,
 		Mentionable: &ROLE_MENTIONNABLE,
 	})
+
+	error = referenceRoleInChannel(
+		s,
+		i,
+		groupName,
+		i.ApplicationCommandData().Options[0].StringValue(),
+		role.ID,
+	)
+
+	if error != nil {
+		sendErrorMessage(s, i, error.Error())
+		return
+	}
 
 	category, error := s.GuildChannelCreateComplex(
 		i.GuildID,
