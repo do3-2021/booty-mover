@@ -55,6 +55,7 @@ func sendErrorMessage(s *discordgo.Session, i *discordgo.InteractionCreate, erro
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: fmt.Sprintf("❌ Error: %v", error),
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 }
