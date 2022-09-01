@@ -22,7 +22,7 @@ func ConnectPostgres() (db *sql.DB, err error) {
 	if err != nil {
 		return nil, err
 	}
-	err = db.Ping()
+	err = initDB(db)
 
 	if err == nil {
 		globalDB = db
@@ -36,4 +36,9 @@ func GetDB() (db *sql.DB, err error) {
 	}
 	return ConnectPostgres()
 
+}
+
+func initDB(db *sql.DB) (err error) {
+	_, err = db.Query("CREATE TABLE IF NOT EXISTS guilds (id VARCHAR(24) PRIMARY KEY, group_channel VARCHAR(24))")
+	return
 }

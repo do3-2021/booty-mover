@@ -15,7 +15,10 @@ func GetGroupChannel(db *sql.DB, guildID string) (channelID string, err error) {
 // Set the group configuration channel for a guild
 func SetGroupChannel(db *sql.DB, channelID, guildID string) (err error) {
 
-	_, err = db.Exec("UPDATE guilds SET group_channel = $1 WHERE id = $2", channelID, guildID)
+	_, err = db.Exec(`INSERT INTO guilds (id, group_channel) 
+	VALUES (?, ?)
+	ON CONFLICT (id) DO UPDATE 
+		SET group_channel = excluded.group_channel;`, channelID, guildID)
 
 	return
 }
