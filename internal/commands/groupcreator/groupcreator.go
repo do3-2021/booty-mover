@@ -128,7 +128,18 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	groupName := strings.Replace(i.ApplicationCommandData().Options[0].StringValue(), " ", "-", -1)
+	// get args
+
+	description := ""
+	groupName := ""
+	for _, option := range i.ApplicationCommandData().Options {
+		switch option.Name {
+		case "description":
+			description = option.StringValue()
+		case "name":
+			groupName = strings.Replace(i.ApplicationCommandData().Options[0].StringValue(), " ", "-", -1)
+		}
+	}
 
 	guild, error := s.GuildChannels(i.GuildID)
 	if error != nil {
@@ -166,7 +177,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s,
 		i,
 		groupName,
-		i.ApplicationCommandData().Options[0].StringValue(),
+		description,
 		role.ID,
 	)
 
