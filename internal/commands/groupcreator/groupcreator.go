@@ -121,7 +121,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
+				Flags:   discordgo.MessageFlagsEphemeral,
 				Content: "You have Sucessfully joined the group! 🎉",
 			},
 		})
@@ -242,6 +242,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
 				Content: fmt.Sprintf("✅ Created goup '%v'! 🎉", groupName),
+				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 	}()
