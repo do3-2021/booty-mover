@@ -1,6 +1,17 @@
-# go-starter project
+# Booty-mover
 
-You will need to change the url in `go.mod` and the names in `.env` and `Makefile` to match your project name & VCS hoster
+A server management bot written in go.
+
+## Environment variables
+
+- BOT_TOKEN : token of the discord bot.
+- POSTGRES : uri to connect to the postgres database eg `postgres://postgres:postgres@localhost/postgres?sslmode=disable`.
+
+## How to launch
+
+- Start a PostgerSQL server
+- Set the environment variables
+- Execute the default executable (`make && ./booty-mover` or `go run .`)
 
 ## Dependencies
 
@@ -8,44 +19,7 @@ You will need to change the url in `go.mod` and the names in `.env` and `Makefil
 - go
 - pandoc for manual generation
 
-## Boostraping
-
-Use `./bootsrap.sh <project-uri>` to rename every import automatically.
-Example project uri : `github.com/nilsponsard/go-starter`
-
 ## make commands
 
 - `make all` : builds for Windows, linux generic and Ubuntu/debian (deb), builds the manuals and put everything in the `publish` folder
 - `make` : builds for your current platform
-
-## Folder structure
-
-### assets
-
-Non source files used in the program
-
-### configs
-
-config file
-
-### DEBIAN
-
-Configuration file for packaging a .deb package.
-Update dependencies in DEBIAN/control.
-
-### internal
-
-Code that won’t be reusable in other projects
-
-### manuals
-
-Sources files to build a manual
-TODO : document how to write and build a documentation
-
-### pkg
-
-Code that can be reused in other projects like log system
-
-### scripts
-
-Scripts used by the Makefile to do different build actions
