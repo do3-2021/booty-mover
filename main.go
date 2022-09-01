@@ -7,6 +7,7 @@ import (
 	"github.com/NilsPonsard/verbosity"
 	"github.com/do3-2021/booty-mover/internal/bot"
 	"github.com/do3-2021/booty-mover/internal/commands"
+	"github.com/do3-2021/booty-mover/internal/database"
 )
 
 // Version will be set by the script build.sh
@@ -22,6 +23,13 @@ func main() {
 	}
 
 	defer session.Close()
+
+	db, err := database.ConnectPostgres()
+
+	if err != nil {
+		verbosity.Fatal("Can’t connect to db : ", err)
+	}
+	defer db.Close()
 
 	commands.Configure(session)
 
