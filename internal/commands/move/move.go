@@ -87,8 +87,8 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// get source and destination channels
 
 	options := i.ApplicationCommandData().Options
-	sourceChannelId := options[0].Value.(string)
-	destinationChannelId := options[1].Value.(string)
+	sourceChannelId := options[0].Value.StringValue()
+	destinationChannelId := options[1].Value.StringValue()
 
 	sameChannelError := IsSameChannels(sourceChannelId, destinationChannelId)
 	if sameChannelError != nil {
