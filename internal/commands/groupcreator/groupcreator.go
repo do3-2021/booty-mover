@@ -1,6 +1,7 @@
 package groupcreator
 
 import (
+	"sync"
 	"fmt"
 	"strings"
 
@@ -47,6 +48,17 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	groupName := strings.Replace(i.ApplicationCommandData().Options[0].StringValue(), " ", "-", -1)
 
 	guild, error := s.GuildChannels(i.GuildID)
+	if (error != nil) {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: fmt.Sprintf("❌ Error: %v", error),
+			},
+		})
+
+		return;
+	}
+
 	var groups []string
 	
 	verbosity.Debug("Guild: ", guild)
@@ -90,31 +102,47 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return;
 	}
 
-	s.GuildChannelCreateComplex(
-		i.GuildID, 
-		discordgo.GuildChannelCreateData{
-			Name: "txt-" + groupName,
-			Type: discordgo.ChannelTypeGuildText,
-			ParentID: category.ID,
-		},
-	)
+	var wg sync.WaitGroup
+	wg.Add(3)
 
-	s.GuildChannelCreateComplex(
-		i.GuildID, 
-		discordgo.GuildChannelCreateData{
-			Name: "voc-" + groupName,
-			Type: discordgo.ChannelTypeGuildVoice,
-			ParentID: category.ID,
-		},
-	)
+	go func () {
+		defer wg.Done()
 
+		s.GuildChannelCreateComplex(
+			i.GuildID, 
+			discordgo.GuildChannelCreateData{
+				Name: "txt-" + groupName,
+				Type: discordgo.ChannelTypeGuildText,
+				ParentID: category.ID,
+			},
+		)
+	}()
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("✅ Created goup '%v'! 🎉🎉", groupName),
-		},
-	})
+	go func () {
+		defer wg.Done()
+
+		s.GuildChannelCreateComplex(
+			i.GuildID, 
+			discordgo.GuildChannelCreateData{
+				Name: "voc-" + groupName,
+				Type: discordgo.ChannelTypeGuildVoice,
+				ParentID: category.ID,
+			},
+		)
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: fmt.Sprintf("✅ Created goup '%v'! 🎉🎉", groupName),
+			},
+		})
+	}()
+
+	wg.Wait()
 }
 
 var Summary = common.CommandDescriptor{
