@@ -23,7 +23,7 @@ func Handle(s *discordgo.Session, evt *discordgo.VoiceStateUpdate) {
 
 	// if joining a channel
 	if channelID != "" {
-		err := updateVoiceOfCategory(s, channelID)
+		err := updateVoiceOfCategory(s, channelID, false)
 		if err != nil {
 			verbosity.Error(err)
 		}
@@ -31,7 +31,7 @@ func Handle(s *discordgo.Session, evt *discordgo.VoiceStateUpdate) {
 
 	// update the last channel the user was in
 	if evt.BeforeUpdate != nil {
-		err := updateVoiceOfCategory(s, evt.BeforeUpdate.ChannelID)
+		err := updateVoiceOfCategory(s, evt.BeforeUpdate.ChannelID, true)
 		if err != nil {
 			verbosity.Error(err)
 		}
@@ -39,7 +39,7 @@ func Handle(s *discordgo.Session, evt *discordgo.VoiceStateUpdate) {
 
 }
 
-func updateVoiceOfCategory(session *discordgo.Session, channelID string) (err error) {
+func updateVoiceOfCategory(session *discordgo.Session, channelID string, leaving bool) (err error) {
 
 	channel, err := session.Channel(channelID)
 	if err != nil {
@@ -74,27 +74,23 @@ func updateVoiceOfCategory(session *discordgo.Session, channelID string) (err er
 
 	// find all voice channels in the category
 
-	emptyChannels := 0
+	emptyChannels := make([]*discordgo.Channel, 0)
 
 	for _, guildChannel := range guild.Channels {
 		if guildChannel.ParentID == category && guildChannel.Type == discordgo.ChannelTypeGuildVoice && isCompatibleChannelName(guildChannel.Name) {
 			if !usedVoiceChannels[guildChannel.ID] {
-				emptyChannels++
-			}
-			if emptyChannels > 1 && isTemporaryChannelName(guildChannel.Name) {
-				// delete this channel
-				st, err := session.ChannelDelete(guildChannel.ID)
+				emptyChannels = append(emptyChannels, guildChannel)
 
-				if err != nil {
-					verbosity.Error("error deleting channel : ", err)
-				} else {
-					verbosity.Debug("deleted channel ", st.Name, " ", st.ID)
+				// if we are not leaving this channel, no need to search for one to delete
+				if !leaving {
+					break
 				}
+
 			}
 		}
 	}
 
-	if emptyChannels == 0 {
+	if len(emptyChannels) == 0 {
 
 		baseName := strings.TrimPrefix(strings.TrimPrefix(channel.Name, "🔉"), "🕐")
 		splittedName := strings.Split(baseName, "#")
@@ -121,6 +117,27 @@ func updateVoiceOfCategory(session *discordgo.Session, channelID string) (err er
 			verbosity.Error(err)
 		}
 		verbosity.Debug("created channel ", name, " ", st.ID)
+	} else if len(emptyChannels) > 1 {
+
+		remaining := len(emptyChannels)
+
+		// delete the empty temporary channels
+
+		for _, guildChannel := range emptyChannels {
+
+			if remaining == 1 {
+				break
+			}
+			if isTemporaryChannelName(guildChannel.Name) {
+				verbosity.Debug("deleting channel ", guildChannel.Name, " ", guildChannel.ID)
+				_, err = session.ChannelDelete(guildChannel.ID)
+				if err != nil {
+					verbosity.Error(err)
+				}
+				remaining--
+			}
+
+		}
 	}
 
 	return
