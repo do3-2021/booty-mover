@@ -9,16 +9,16 @@ import (
 )
 
 type CommandsHandler struct {
-	descriptors        map[string]*common.CommandDescriptor
+	descriptors        map[string]common.CommandDescriptor
 	registeredCommands []*discordgo.ApplicationCommand
 }
 
 // Create a new command handler with given command descriptors
-func New(summaries []common.CommandDescriptor) *CommandsHandler {
-	summariesMap := make(map[string]*common.CommandDescriptor)
+func New(descriptors []common.CommandDescriptor) *CommandsHandler {
+	summariesMap := make(map[string]common.CommandDescriptor)
 
-	for _, summary := range summaries {
-		summariesMap[summary.Command.Name] = &summary
+	for _, summary := range descriptors {
+		summariesMap[summary.Command.Name] = summary
 	}
 
 	return &CommandsHandler{
@@ -30,7 +30,6 @@ func New(summaries []common.CommandDescriptor) *CommandsHandler {
 func (h *CommandsHandler) Register(session *discordgo.Session) (registeredCommands []*discordgo.ApplicationCommand) {
 
 	for _, descriptor := range h.descriptors {
-		verbosity.Debug("Registering command:", descriptor.Command.Name)
 		cmd, err := session.ApplicationCommandCreate(session.State.User.ID, "", descriptor.Command)
 		if err != nil {
 			verbosity.Fatal(err)
