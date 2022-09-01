@@ -3,15 +3,17 @@ package commands
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/do3-2021/booty-mover/internal/commands/common"
+	configurechannel "github.com/do3-2021/booty-mover/internal/commands/configure-channel"
+	"github.com/do3-2021/booty-mover/internal/commands/groupcreator"
 	"github.com/do3-2021/booty-mover/internal/commands/ping"
 	"github.com/do3-2021/booty-mover/internal/commands/roleselector"
-	"github.com/do3-2021/booty-mover/internal/commands/groupcreator"
 )
 
 // Put your commands descriptors here
 var descriptors = []common.CommandDescriptor{
 	ping.Summary,
 	roleselector.Summary,
+	configurechannel.Descriptor,
 	groupcreator.Summary,
 }
 
