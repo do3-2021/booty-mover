@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/NilsPonsard/verbosity"
 	"github.com/bwmarrin/discordgo"
@@ -29,8 +29,9 @@ func New(summaries []common.CommandDescriptor) *CommandsHandler {
 // Register every commands to the session
 func (h *CommandsHandler) Register(session *discordgo.Session) (registeredCommands []*discordgo.ApplicationCommand) {
 
-	for _, summary := range h.descriptors {
-		cmd, err := session.ApplicationCommandCreate(session.State.User.ID, "", summary.Command)
+	for _, descriptor := range h.descriptors {
+		verbosity.Debug("Registering command:", descriptor.Command.Name)
+		cmd, err := session.ApplicationCommandCreate(session.State.User.ID, "", descriptor.Command)
 		if err != nil {
 			verbosity.Fatal(err)
 
@@ -45,28 +46,41 @@ func (h *CommandsHandler) Register(session *discordgo.Session) (registeredComman
 }
 
 // Handle a discord interaction event and dispatch them to the correspondin descriptor
+// InteractionApplicationCommand are found by name
+// InteractionMessageComponent are matched with the prefix of the custom id being the command name
 func (h *CommandsHandler) Handle(session *discordgo.Session, interaction *discordgo.InteractionCreate) {
 
 	switch interaction.Type {
-	case discordgo.InteractionApplicationCommand:
 
+	// slash commands
+	case discordgo.InteractionApplicationCommand:
+		name := interaction.ApplicationCommandData().Name
+
+		descriptor, ok := h.descriptors[name]
+
+		if !ok {
+			verbosity.Error("No command found for name:", name)
+			return
+		}
+
+		descriptor.Execute(session, interaction)
+
+	// interactions on a message
 	case discordgo.InteractionMessageComponent:
+
+		customId := interaction.MessageComponentData().CustomID
+
+		// search for the command corresponding to the custom id
+
+		for key, descriptor := range h.descriptors {
+			if strings.HasPrefix(customId, key) {
+				descriptor.Execute(session, interaction)
+				return
+			}
+		}
+
 	default:
 		verbosity.Debug("Unhandled interaction type:", interaction.Type)
 	}
-
-	if interaction.Type == discordgo.InteractionMessageComponent {
-		verbosity.Debug(fmt.Sprintf("message : %+v", interaction.MessageComponentData()))
-		return
-	}
-
-	name := interaction.ApplicationCommandData().Name
-
-	summary, ok := h.descriptors[name]
-	if !ok {
-		verbosity.Debug("Unknown command:", name)
-		return
-	}
-	summary.Execute(session, interaction)
 
 }
