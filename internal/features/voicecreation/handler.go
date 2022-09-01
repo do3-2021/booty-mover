@@ -109,9 +109,10 @@ func updateVoiceOfCategory(session *discordgo.Session, channelID string, leaving
 		name := "🕐" + baseName + "#" + suffix
 
 		_, err = session.ChannelEditComplex(st.ID, &discordgo.ChannelEdit{
-			ParentID: category,
-			Position: channel.Position + 1,
-			Name:     name,
+			ParentID:             category,
+			Position:             channel.Position + 1,
+			Name:                 name,
+			PermissionOverwrites: channel.PermissionOverwrites,
 		})
 		if err != nil {
 			verbosity.Error(err)
