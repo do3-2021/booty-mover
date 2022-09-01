@@ -84,3 +84,14 @@ func (h *CommandsHandler) Handle(session *discordgo.Session, interaction *discor
 	}
 
 }
+
+// Unregister every commands from the session
+func (h *CommandsHandler) Close(session *discordgo.Session) {
+
+	for _, cmd := range h.registeredCommands {
+		err := session.ApplicationCommandDelete(session.State.User.ID, "", cmd.ID)
+		if err != nil {
+			verbosity.Error(err)
+		}
+	}
+}
