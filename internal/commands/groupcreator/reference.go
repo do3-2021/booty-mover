@@ -12,17 +12,17 @@ import (
 )
 
 // Add a message to the configured role channel
-func referenceRoleInChannel(s *discordgo.Session, i *discordgo.InteractionCreate, group string, description string, roleID string) (error error) {
-	db, error := database.GetDB()
+func ReferenceRoleInChannel(s *discordgo.Session, i *discordgo.InteractionCreate, group string, description string, roleID string) (err error) {
+	db, err := database.GetDB()
 
-	if error != nil {
-		verbosity.Error(error.Error())
+	if err != nil {
+		verbosity.Error(err.Error())
 		return errors.New("could not contact database to get the role listing channel's ID.\nCancelling Group's creation")
 	}
 
-	channel, error := guild.GetGroupChannel(db, i.GuildID)
-	if error != nil {
-		verbosity.Error(error.Error())
+	channel, err := guild.GetGroupChannel(db, i.GuildID)
+	if err != nil {
+		verbosity.Error(err.Error())
 		return errors.New("could not find the role listing channel's.\nDid you run the " + configurechannel.Descriptor.Command.Name + " command?")
 	}
 

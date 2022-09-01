@@ -24,7 +24,7 @@ var command = &discordgo.ApplicationCommand{
 		{
 			Type:        discordgo.ApplicationCommandOptionString,
 			Name:        "description",
-			Required:    false,
+			Required:    true,
 			Description: "Description of the group",
 			MaxLength:   200,
 		},
@@ -75,13 +75,13 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		case "description":
 			description = option.StringValue()
 		case "name":
-			groupName = strings.Replace(i.ApplicationCommandData().Options[0].StringValue(), " ", "-", -1)
+			groupName = strings.Replace(option.StringValue(), " ", "-", -1)
 		}
 	}
 
 	guild, error := s.GuildChannels(i.GuildID)
 	if error != nil {
-		sendErrorMessage(s, i, error.Error())
+		SendErrorMessage(s, i, error.Error())
 		return
 	}
 
@@ -97,7 +97,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if contains(groups, groupName) {
-		sendErrorMessage(s, i, fmt.Sprintf("group %v already exists", groupName))
+		SendErrorMessage(s, i, fmt.Sprintf("group %v already exists", groupName))
 		verbosity.Debug(fmt.Sprintf("group %v already exists", groupName))
 
 		return
@@ -112,7 +112,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	})
 
 	if err != nil {
-		sendErrorMessage(s, i, error.Error())
+		SendErrorMessage(s, i, error.Error())
 		return
 	}
 
@@ -121,7 +121,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err = createCategory(s, i, &wg, role.ID, groupName, description)
 
 	if err != nil {
-		sendErrorMessage(s, i, error.Error())
+		SendErrorMessage(s, i, error.Error())
 		return
 	}
 
@@ -135,7 +135,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	go func() {
 		defer wg.Done()
 
-		error = referenceRoleInChannel(
+		error = ReferenceRoleInChannel(
 			s,
 			i,
 			groupName,

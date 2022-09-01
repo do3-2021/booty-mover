@@ -6,11 +6,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func sendErrorMessage(s *discordgo.Session, i *discordgo.InteractionCreate, error string) {
+func SendErrorMessage(s *discordgo.Session, i *discordgo.InteractionCreate, err string) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("❌ Error: %v", error),
+			Content: fmt.Sprintf("❌ Error: %v", err),
 			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
