@@ -17,15 +17,20 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	db, err := database.GetDB()
 
+	message := ""
+
+	defer s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: message,
+			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	})
+
 	if err != nil {
 		verbosity.Error(err)
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Error getting the db :/",
-			},
-		})
 
+		message = "Error getting the db :/ "
 		return
 	}
 
@@ -33,22 +38,14 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if err != nil {
 		verbosity.Error(err)
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Error updating the db :/",
-			},
-		})
+
+		message = "Error updating the db :/"
 
 		return
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "Channel configured !",
-		},
-	})
+	message = "Channel confiured !"
+
 }
 
 var Descriptor = common.CommandDescriptor{
