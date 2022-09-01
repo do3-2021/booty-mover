@@ -7,6 +7,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+func isCompatibleChannelName(name string) bool {
+	return strings.HasPrefix(name, "🔉") || strings.HasPrefix(name, "🕐")
+}
+
+func isTemporaryChannelName(name string) bool {
+	return strings.HasPrefix(name, "🕐")
+}
+
 // when there is no empty voice channel in a category , create a new voice channel in this category
 // when there is more than one empty voice channel in a category, delete all of them except one
 func Handle(s *discordgo.Session, evt *discordgo.VoiceStateUpdate) {
@@ -15,23 +23,18 @@ func Handle(s *discordgo.Session, evt *discordgo.VoiceStateUpdate) {
 
 	// if joining a channel
 	if channelID != "" {
-		go func() {
-			err := updateVoiceOfCategory(s, channelID)
-			if err != nil {
-				verbosity.Error(err)
-			}
-		}()
+		err := updateVoiceOfCategory(s, channelID)
+		if err != nil {
+			verbosity.Error(err)
+		}
 	}
 
 	// update the last channel the user was in
 	if evt.BeforeUpdate != nil {
-		go func() {
-
-			err := updateVoiceOfCategory(s, evt.BeforeUpdate.ChannelID)
-			if err != nil {
-				verbosity.Error(err)
-			}
-		}()
+		err := updateVoiceOfCategory(s, evt.BeforeUpdate.ChannelID)
+		if err != nil {
+			verbosity.Error(err)
+		}
 	}
 
 }
@@ -45,7 +48,7 @@ func updateVoiceOfCategory(session *discordgo.Session, channelID string) (err er
 	}
 
 	// we only want a voice channel with the emoji
-	if channel.Type != discordgo.ChannelTypeGuildVoice || !strings.HasPrefix(channel.Name, "🔉") {
+	if channel.Type != discordgo.ChannelTypeGuildVoice || !isCompatibleChannelName(channel.Name) {
 		return
 	}
 
@@ -74,35 +77,50 @@ func updateVoiceOfCategory(session *discordgo.Session, channelID string) (err er
 	emptyChannels := 0
 
 	for _, guildChannel := range guild.Channels {
-		if guildChannel.ParentID == category && guildChannel.Type == discordgo.ChannelTypeGuildVoice && strings.HasPrefix(guildChannel.Name, "🔉") {
+		if guildChannel.ParentID == category && guildChannel.Type == discordgo.ChannelTypeGuildVoice && isCompatibleChannelName(guildChannel.Name) {
 			if !usedVoiceChannels[guildChannel.ID] {
 				emptyChannels++
 			}
-			if emptyChannels > 1 {
+			if emptyChannels > 1 && isTemporaryChannelName(guildChannel.Name) {
 				// delete this channel
 				st, err := session.ChannelDelete(guildChannel.ID)
-				verbosity.Debug("deleted channel ", st.Name, " ", st.ID)
+
 				if err != nil {
-					verbosity.Error(err)
+					verbosity.Error("error deleting channel : ", err)
+				} else {
+					verbosity.Debug("deleted channel ", st.Name, " ", st.ID)
 				}
 			}
 		}
 	}
 
 	if emptyChannels == 0 {
+
+		baseName := strings.TrimPrefix(strings.TrimPrefix(channel.Name, "🔉"), "🕐")
+		splittedName := strings.Split(baseName, "#")
+
 		// create a new channel
-		st, err := session.GuildChannelCreate(channel.GuildID, channel.Name, discordgo.ChannelTypeGuildVoice)
+		st, err := session.GuildChannelCreate(channel.GuildID, baseName, discordgo.ChannelTypeGuildVoice)
 		if err != nil {
 			verbosity.Error(err)
 		}
-		verbosity.Debug("created channel ", st.Name, " ", st.ID)
+		suffix := st.ID[len(st.ID)-4:]
+
+		if len(splittedName) > 1 {
+			baseName = strings.Join(splittedName[:len(splittedName)-1], "#")
+		}
+
+		name := "🕐" + baseName + "#" + suffix
+
 		_, err = session.ChannelEditComplex(st.ID, &discordgo.ChannelEdit{
 			ParentID: category,
 			Position: channel.Position + 1,
+			Name:     name,
 		})
 		if err != nil {
 			verbosity.Error(err)
 		}
+		verbosity.Debug("created channel ", name, " ", st.ID)
 	}
 
 	return
