@@ -9,7 +9,7 @@ import (
 )
 
 var command = &discordgo.ApplicationCommand{
-	Name:        "move",
+	Name:        "move-voice-all",
 	Description: "Move all users from one voice channel to another",
 	Options: []*discordgo.ApplicationCommandOption{
 		{
