@@ -6,4 +6,5 @@ require (
 	github.com/NilsPonsard/verbosity v0.0.0-20211231155127-d885c1011662
 	github.com/bwmarrin/discordgo v0.26.1
 	github.com/lib/pq v1.10.6
+	layeh.com/gopus v0.0.0-20210501142526-1ee02d434e32
 )

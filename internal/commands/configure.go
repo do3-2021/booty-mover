@@ -5,6 +5,7 @@ import (
 	"github.com/do3-2021/booty-mover/internal/commands/common"
 	configurechannel "github.com/do3-2021/booty-mover/internal/commands/configure-channel"
 	"github.com/do3-2021/booty-mover/internal/commands/groupcreator"
+	"github.com/do3-2021/booty-mover/internal/commands/ohyeah"
 	"github.com/do3-2021/booty-mover/internal/commands/ping"
 	"github.com/do3-2021/booty-mover/internal/commands/roleselector"
 )
@@ -14,6 +15,7 @@ var descriptors = []common.CommandDescriptor{
 	ping.Summary,
 	roleselector.Summary,
 	configurechannel.Descriptor,
+	ohyeah.Descriptor,
 	groupcreator.Summary,
 }
 
