@@ -1,6 +1,7 @@
 package groupcreator
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/NilsPonsard/verbosity"
@@ -28,26 +29,90 @@ var command = &discordgo.ApplicationCommand{
 	} ,
 }
 
+func contains(s []string, e string) bool {
+    for _, v := range s {
+        if v == e {
+            return true
+        }
+    }
+    return false
+}
 
 //This command will store The User, give him a role that grants him acess to a fresh new channel
 //
 func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	//user := i.Member
+	member := i.Member
 
-	grpNme := strings.Replace(i.ApplicationCommandData().Options[0].StringValue(), " ", "-", -1)
+	verbosity.Debug("User", member.User.ID, ",tries to create group '", i.ApplicationCommandData().Options[0].Value, "'")
+	groupName := strings.Replace(i.ApplicationCommandData().Options[0].StringValue(), " ", "-", -1)
 
-	s.GuildChannelCreate(
+	guild, error := s.GuildChannels(i.GuildID)
+	var groups []string
+	
+	verbosity.Debug("Guild: ", guild)
+
+	for i := 0; i < len(guild); i += 1 {
+		if guild[i].Type == discordgo.ChannelTypeGuildCategory {
+			verbosity.Debug(guild[i].Name)
+			groups = append(groups, guild[i].Name)
+		}
+	}
+
+	verbosity.Debug(groups)
+
+	if (contains(groups, groupName)) {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: fmt.Sprintf("❌ Error: group %v already exists", groupName),
+			},
+		})
+
+		return;
+	}
+
+	category, error := s.GuildChannelCreateComplex(
 		i.GuildID, 
-		grpNme,
-		discordgo.ChannelTypeGuildText,
+		discordgo.GuildChannelCreateData{
+			Name: groupName,
+			Type: discordgo.ChannelTypeGuildCategory,
+		},
 	)
 
-	verbosity.Debug(i.ApplicationCommandData().Options[0].Value)
+	if (error != nil) {
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: fmt.Sprintf("%v", error),
+			},
+		})
+
+		return;
+	}
+
+	s.GuildChannelCreateComplex(
+		i.GuildID, 
+		discordgo.GuildChannelCreateData{
+			Name: "txt-" + groupName,
+			Type: discordgo.ChannelTypeGuildText,
+			ParentID: category.ID,
+		},
+	)
+
+	s.GuildChannelCreateComplex(
+		i.GuildID, 
+		discordgo.GuildChannelCreateData{
+			Name: "voc-" + groupName,
+			Type: discordgo.ChannelTypeGuildVoice,
+			ParentID: category.ID,
+		},
+	)
+
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Group ",
+			Content: fmt.Sprintf("✅ Created goup '%v'! 🎉🎉", groupName),
 		},
 	})
 }
