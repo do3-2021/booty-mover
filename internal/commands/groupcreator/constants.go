@@ -19,3 +19,6 @@ var ROLE_PERMISSIONS int64 = 0x0000000000000040 | // ADD_REACTIONS
 var ROLE_COLOR int = 3447003
 var ROLE_HOIST bool = false
 var ROLE_MENTIONNABLE bool = true
+
+// this concerns user's input only, for instance a private group will have 🔒 appended on its group name 
+var FORBIDDEN_GROUP_CHARS = "🔒"
