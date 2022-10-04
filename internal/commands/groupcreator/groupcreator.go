@@ -30,7 +30,7 @@ var command = &discordgo.ApplicationCommand{
 		},
 		{
 			Type:        discordgo.ApplicationCommandOptionBoolean,
-			Name:        "visibility",
+			Name:        "isprivate",
 			Required:    false,
 			Description: "Wether the group is private or not. A private group is joignable only when you are invited",
 		},
@@ -70,12 +70,23 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	description := ""
 	groupName := ""
+	isPrivate := false
 	for _, option := range i.ApplicationCommandData().Options {
 		switch option.Name {
-		case "description":
-			description = option.StringValue()
-		case "name":
-			groupName = strings.Replace(option.StringValue(), " ", "-", -1)
+
+			case "description":
+				description = option.StringValue()
+
+			case "name":
+				
+				forbidden_runes := []rune(FORBIDDEN_GROUP_CHARS)
+				for i := 0; i < len(forbidden_runes) ; i++ {
+					groupName = strings.Replace(groupName, string(forbidden_runes[i]), "", -1)
+				}						
+				groupName = strings.Replace(option.StringValue(), " ", "-", -1)
+
+			case "isprivate":
+				isPrivate = option.BoolValue() 
 		}
 	}
 
@@ -85,7 +96,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	verbosity.Debug("User", member.User.ID, ", tries to create group '", i.ApplicationCommandData().Options[0].Value, "' in guild ", guild)
+	verbosity.Debug("User", member.User.ID, ", tries to create group '", i.ApplicationCommandData().Options[0].Value, "' in guild ", guild, ". Is it private ? ", isPrivate)
 
 	var groups []string
 
@@ -118,7 +129,7 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	var wg sync.WaitGroup
 
-	err = createCategory(s, i, &wg, role.ID, groupName, description)
+	err = createCategory(s, i, &wg, role.ID, groupName, description, isPrivate)
 
 	if err != nil {
 		SendErrorMessage(s, i, error.Error())
@@ -134,14 +145,15 @@ func execute(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		error = ReferenceRoleInChannel(
-			s,
-			i,
-			groupName,
-			description,
-			role.ID,
-		)
+		if !isPrivate {
+			error = ReferenceRoleInChannel(
+				s,
+				i,
+				groupName,
+				description,
+				role.ID,
+			)
+		}
 	}()
 
 	wg.Wait()

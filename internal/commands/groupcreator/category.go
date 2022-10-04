@@ -7,12 +7,19 @@ import (
 )
 
 // Creates the category and the channels for the group
-func createCategory(s *discordgo.Session, i *discordgo.InteractionCreate, wg *sync.WaitGroup, roleID string, groupName string, description string) (err error) {
+func createCategory(s *discordgo.Session, i *discordgo.InteractionCreate, wg *sync.WaitGroup, roleID string, groupName string, description string, isPrivate bool) (err error) {
+
+	categoryName := groupName
+
+	if isPrivate {
+		categoryName = "🔒 " + categoryName
+	}
 
 	category, err := s.GuildChannelCreateComplex(
 		i.GuildID,
 		discordgo.GuildChannelCreateData{
-			Name: groupName,
+			Name: categoryName,
+			Topic: groupName,
 			Type: discordgo.ChannelTypeGuildCategory,
 			PermissionOverwrites: []*discordgo.PermissionOverwrite{
 				{
@@ -41,6 +48,7 @@ func createCategory(s *discordgo.Session, i *discordgo.InteractionCreate, wg *sy
 			i.GuildID,
 			discordgo.GuildChannelCreateData{
 				Name:     "txt-" + groupName,
+				Topic: description,
 				Type:     discordgo.ChannelTypeGuildText,
 				ParentID: category.ID,
 			},
@@ -55,6 +63,7 @@ func createCategory(s *discordgo.Session, i *discordgo.InteractionCreate, wg *sy
 			i.GuildID,
 			discordgo.GuildChannelCreateData{
 				Name:     "🔉voc-" + groupName,
+				Topic: description,
 				Type:     discordgo.ChannelTypeGuildVoice,
 				ParentID: category.ID,
 			},
